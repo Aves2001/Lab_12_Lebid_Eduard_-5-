@@ -3,33 +3,31 @@
  /*/              Saved in Encoding UTF-8                /*/
 /*/-------------------------!!!-------------------------/*/
 #include <stdio.h>
-#include <stdlib.h>
-#include <conio.h>
-#include <mem.h>
 #include "default_cfg.h"
-                                 /////////////////////////////////////////////////////////////
-#define _yellow SetColor(14,0); // жовний вивід тексту на екран + чорний фон               //
-#define _red SetColor(12,0);   // червоний вивід тексту на екран + чорний фон             //
-#define _green SetColor(10,0);// повернення зеленого виводу тексту на екран + чорний фон //
-                             /////////////////////////////////////////////////////////////
-#define TOP 3
-struct date {
-	int day;
-	char month[20];
-	int year;
+struct date // дата проведення операції
+{
+	int day; // день
+	char month[20];  // місяць
+	int year;  // рік
 };
 
-struct bank_db{
-	int numm;
-	char name[20];
-	int summ;
-	struct date dt;
+struct bank_db // табличка з клієнтами банку
+{
+	int numm; // № рахунку
+	char name[20]; // прізвище та ініціали
+	int summ; // сума вкладу
+	struct date dt; // дата проведення операції
 };
+
+void print_bank_db(struct bank_db *list, int N);
+void sort_TOP_print_bank_db(struct bank_db *list, int N, int TOP);
 
 int main()
 {
 	start_cfg(); // default_cfg.h
-struct bank_db list[] = {
+	int top = 0; // максимальна кількість клієнтів для таблиці TOP
+	
+	struct bank_db list[] = {
 	{0, "Ковач Т.П.", 1, 
 	{10, "Грудня", 2019}},
 	
@@ -41,6 +39,9 @@ struct bank_db list[] = {
 	
 	{3, "Руцька К.К.", 45, 
 	{15, "Травня", 2020}},
+
+	{2, "Підлобний Б.М.", 777,
+	{24, "Травня", 2020}},
 	
 	{1, "Малек В.В.", 1000,
 	{17, "Грудня", 2020}},
@@ -49,78 +50,113 @@ struct bank_db list[] = {
 	{18, "Грудня", 2020}},
 
 	{0, "Ковач Т.П.", 800, 
-	{20, "Грудня", 2020}}
-	
+	{20, "Грудня", 2020}},
+
+	{1, "Малек В.В.", 10,
+	{21, "Грудня", 2020}},
+
+	{0, "Ковач Т.П.", 105, 
+	{22, "Грудня", 2020}}
 };
 
-int N = sizeof(list)/sizeof(list[0]);
+int N = sizeof(list)/sizeof(list[0]); // Кількість рядків в таблиці
+	
+	printf("\nВведіть максимальну кількість клієнтів для таблиці TOP: ");
+	scanf("%d", &top); // максимальна кількість клієнтів для таблиці TOP
+	
+	printf("\n%50s", "Дані про клієнтів банку:");
+	print_bank_db(list, N);
 
-	printf("\n|%-9s |%-20s |%-11s |%-24s", "№ рахунку", "прізвище та ініціали", "сума вкладу", "дата проведення операції");
-for (int i = 0; i < N; i++)
-{
-	printf("\n|#%-9d|%-20s |$%-11d|%d %s %d", list[i].numm, list[i].name, list[i].summ, list[i].dt.day, list[i].dt.month, list[i].dt.year);
-}
+	sort_TOP_print_bank_db(list, N, top);
 
-int *summ = (int*)calloc(N, sizeof(int));
-int *index = (int*)calloc(N, sizeof(int));
-
-printf("\n");
-for (int i = 0; i < N; i++)
-{
-	index[list[i].numm] = list[i].numm;
-	summ[list[i].numm] += 1;
-}
-int tmp1,tmp2;
-for (int i = 1; i < N; i++)
-{
-	if (summ[i] > summ[i-1])
-	{
-		tmp1 = summ[i];
-		summ[i] = summ[i-1];
-		summ[i-1] = tmp1;
-
-		tmp2 = index[i];
-		index[i] = index[i-1];
-		index[i-1] = tmp2;
-	}
-}
-realloc(summ, sizeof(int)*TOP);
-realloc(index, sizeof(int)*TOP);
-printf("\n");
-
-// for (int i = 0; i < TOP; i++)
-// {
-// 	printf("index[%d] = %-10d",i, index[i]);
-// 	printf("summ[%d] = %-10d\n",i, summ[i]);
-// }
-// printf("\n");
-free(summ);
-
-printf("\n%-3sТоп три клієнти банку з найбільшою кількістю банківських операцій:","");
-printf("\nГ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-printf("\n|%-9s |%-20s |%-11s |%-24s", "№ рахунку", "прізвище та ініціали", "сума вкладу", "дата проведення операції");
-int i=0;
-// for (int j = 0; j < TOP; j++)
-// {
-// 	i = index[j];
-// 	printf("\n|#%-3d|#%-9d|%-20s |$%-11d|%d %s %d", j+1, list[i].numm, list[i].name, list[i].summ, list[i].dt.day, list[i].dt.month, list[i].dt.year);
-// }
-
-
-for (int K = 0; K < TOP; K++)
-{
-	for (int j = 0; j < N; j++)
-	{
-		if (list[j].numm == index[K])
-		{
-			i = j;
-		printf("\n|#%-9d|%-20s |$%-11d|%d %s %d", list[i].numm, list[i].name, list[i].summ, list[i].dt.day, list[i].dt.month, list[i].dt.year);
-		}
-	}
-	printf("\n|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-}
-
-free(index);
 	end_cfg(); // default_cfg.h
 	return 0;
+}
+//////////////////////////////////////////////////////////////////////
+void print_bank_db(struct bank_db *list, int N){
+	printf("\nГ======================================================================");
+	printf("\n|%-9s |%-20s |%-11s |%-24s", "№ рахунку", "прізвище та ініціали", "сума вкладу", "дата проведення операції");
+	printf("\n|======================================================================");
+	for (int i = 0; i < N; i++) // виводить всі рядки таблиці
+	{
+		printf("\n|#%-9d|%-20s |$%-11d|%d %s %d", list[i].numm, list[i].name, list[i].summ, list[i].dt.day, list[i].dt.month, list[i].dt.year);
+		printf("\n|======================================================================");
+	}printf("\n");
+}
+//////////////////////////////////////////////////////////////////////
+void sort_TOP_print_bank_db(struct bank_db *list, int N, int TOP){
+	int max = 0; // max+1 --- кількість клієнтів банку
+	int tmp1,tmp2; //
+	int *summ = (int*)calloc(N, sizeof(int)); // виділення памяті для суми кількості банківських операцій клієнта
+	if (!summ)
+	{
+		Error_RED();
+		printf("Невдалося виділити пам'ять");
+		end_cfg(); //default_cfg.h
+		exit(1);
+	}
+	int *index = (int*)calloc(N, sizeof(int)); // // виділення памяті для збереження індекса клієнта (для збереження оригінальної сортіровки)
+	if (!summ)
+	{
+		Error_RED();
+		printf("Невдалося виділити пам'ять");
+		end_cfg(); //default_cfg.h
+		exit(1);
+	}
+
+	for (int i = 0; i < N; i++)
+	{
+		index[list[i].numm] = list[i].numm; // збереження індекса кожного клієнта в масив
+		summ[list[i].numm] += 1; // сумування повторень операцій для кожного клієнта
+
+		if (list[i].numm > max) // якщо № рахунку більший за max
+		{
+			max = list[i].numm; // max = максимальному № рахунку
+		}
+	}
+	if (TOP < 1) // якщо число клієнтів для виводу в табличці топ менша за 1, то вихід з програми
+	{
+		end_cfg();
+		exit(1);
+	}
+
+	if (TOP > max+1) // якщо число клієнтів для виводу в табличці топ більша за кількість клієнтів, виводиться максимальна кількість клієнтів в таблицю топ
+	{
+		TOP = max+1;
+	}
+
+	for (int i = 1; i < N; i++) // сортування індексів клієнтів з найбільшою кількістю банківських операцій
+	{
+		if (summ[i] > summ[i-1])
+		{
+			tmp1 = summ[i];
+			summ[i] = summ[i-1];
+			summ[i-1] = tmp1;
+
+			tmp2 = index[i];
+			index[i] = index[i-1];
+			index[i-1] = tmp2;
+		}
+	}
+	free(summ); // видалення масива за допомогою якого відбувалось сортування індексів клієнтів з найбільшою кількістю банківських операцій 
+	realloc(index, sizeof(int)*TOP); // видалення зайвої частини масиву яка не буде використовуватись
+	printf("\n");
+
+	printf("\n%-3sТоп %d клієнти банку з найбільшою кількістю банківських операцій:","", TOP);
+	printf("\nГ======================================================================");
+	printf("\n|%-9s |%-20s |%-11s |%-24s", "№ рахунку", "прізвище та ініціали", "сума вкладу", "дата проведення операції");
+
+	for (int K = 0; K < TOP; K++) // вивід даних на екран про клієнтів банку з найбільшою кількістю банківських операцій у формі таблиці
+	{
+		printf("\n|======================================================================");
+		for (int j = 0; j < N; j++)
+		{
+			if (list[j].numm == index[K])
+			{
+				printf("\n|#%-9d|%-20s |$%-11d|%d %s %d", list[j].numm, list[j].name, list[j].summ, list[j].dt.day, list[j].dt.month, list[j].dt.year);
+			}
+		}
+	}
+	printf("\n|======================================================================");
+	free(index); // видалення масива з індексами клієнтів які попали в топ
 }
